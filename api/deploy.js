@@ -15,17 +15,16 @@ export default async function handler(req, res) {
   const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
   if (!VERCEL_TOKEN) {
-    return res.status(500).json({ error: "Server misconfigured: VERCEL_TOKEN missing" });
+    return res.status(500).json({ error: "VERCEL_TOKEN missing in environment" });
   }
 
   try {
-    // 1. Kirim file ke Telegram (opsional)
+    // 1. (Opsional) Kirim file ke Telegram
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const buf = Buffer.from(htmlContent, "utf8");
       const form = new FormData();
       form.append("chat_id", TELEGRAM_CHAT_ID);
       form.append("document", buf, { filename: "index.html", contentType: "text/html" });
-
       await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
         method: "POST",
         headers: form.getHeaders(),
@@ -33,7 +32,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Coba buat project (kalau sudah ada → Vercel skip)
+    // 2. Pastikan project ada
     await fetch("https://api.vercel.com/v10/projects", {
       method: "POST",
       headers: {
@@ -43,7 +42,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ name: siteName, framework: null }),
     });
 
-    // 3. Deploy ke Vercel
+    // 3. Deploy (tanpa field "project")
     const payload = {
       name: siteName,
       target: "production",
@@ -69,28 +68,6 @@ export default async function handler(req, res) {
     if (!resp.ok) {
       return res.status(500).json({ error: data?.error?.message || "Deploy gagal" });
     }
-
-    const url = data.url ? `https://${data.url}` : `https://${siteName}.vercel.app`;
-    return res.status(200).json({ url });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-}    const payload = {
-      name: siteName,
-      project: siteName,
-      target: "production",
-      files: [{ file: "index.html", data: htmlContent }],
-      projectSettings: { framework: null }
-    };
-
-    const resp = await fetch("https://api.vercel.com/v13/deployments", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${VERCEL_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) return res.status(500).json({ error: data?.error?.message || "Deploy gagal" });
 
     const url = data.url ? `https://${data.url}` : `https://${siteName}.vercel.app`;
     return res.status(200).json({ url });

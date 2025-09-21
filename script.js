@@ -1,7 +1,7 @@
 let currentUser = null;
 let currentSection = 'overview';
 
-const API_BASE = '';
+const API_BASE = 'plta_ahsvsbshshbd37376363';
 
 const loginModal = document.getElementById('loginModal');
 const dashboard = document.getElementById('dashboard');
